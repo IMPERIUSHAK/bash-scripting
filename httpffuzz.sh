@@ -35,3 +35,17 @@ fi
 
 echo -e "Url: $url\nWordlist: $wordls"
 
+THREADS=10
+
+while IFS= read -r word; do
+(
+	code=$(curl -s -o /dev/null -w "%{http_code} -> $word\n" "$url/$word")
+	echo -e "\033[1;34m[$code] $url/$word\033[0m"
+)&
+
+	while [ "$(jobs -r | wc -l)" -ge "$THREADS" ]; do
+		sleep 0.5
+	done
+done < $wordls
+
+wait
