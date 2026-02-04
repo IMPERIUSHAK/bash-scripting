@@ -29,7 +29,7 @@ then
 
 else
 	echo -e "\033[1;33m Incorrect usage of script:\n httpffuz -w [wordlist] -u [Url]\033[0m"
-	exit 0
+ 	exit 0
 fi
 
 
@@ -39,17 +39,29 @@ THREADS=10
 TIMEOUT=1
 UA="Mozilla/5.0 (x11; Linux x86_64)"
 
-while IFS= read -r word; do
-(
-code=$(curl -k -s \
+main_size=$(curl -k -s \
     -o /dev/null \
     --connect-timeout "$TIMEOUT" \
     -A "$UA" \
-    -w "%{http_code}"\
+    -w "%{size_download}" \
+    "$url"
+)
+
+
+while IFS= read -r word; do
+(
+response=$(curl -k -s \
+    -o /dev/null \
+    --connect-timeout "$TIMEOUT" \
+    -A "$UA" \
+    -w "%{http_code} %{size_download}"\
     "$url/$word"
 )
 
-	if [[ "$code" != "404" && "$code" != "000" ]]; then
+code=$(echo "$response" | awk '{print $1}')
+size=$(echo "$response" | awk '{print $2}')
+
+	if [[ "$code" != "404" && "$code" != "000" && "$size" != "$main_size" ]]; then
     		echo -e "\033[1;32m[$code]\033[0m $url/$word"
 	fi
 )&
